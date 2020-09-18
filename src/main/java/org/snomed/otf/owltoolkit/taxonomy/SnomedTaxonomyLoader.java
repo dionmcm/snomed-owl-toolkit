@@ -115,7 +115,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 							// Destination negated is always false
 							Integer.parseInt(relationshipGroup),
 							0,
-							UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId),
 							parseLong(characteristicTypeId)
 					)
 			);
@@ -135,7 +134,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 						parseLong(destinationId),
 						Integer.parseInt(relationshipGroup),
 						0,
-						UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId),
 						parseLong(characteristicTypeId)));
 			}
 		}
@@ -158,7 +156,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 					new Relationship.ConcreteValue(value),
 					Integer.parseInt(relationshipGroup),
 					0,
-					UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId),
 					parseLong(characteristicTypeId)));
 		} else {
 			snomedTaxonomy.removeRelationship(stated, sourceId, id);
