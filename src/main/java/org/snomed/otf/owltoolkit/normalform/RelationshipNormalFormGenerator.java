@@ -111,18 +111,30 @@ public final class RelationshipNormalFormGenerator {
 		final Stopwatch stopwatch = Stopwatch.createStarted();
 		final List<Long> entries = reasonerTaxonomy.getConceptIds();
 
+		System.out.println("First pass");
+		int done = 0;
 		for (Long conceptId : entries) {
 			firstNormalisationPass(conceptId);
+			if (++done % 10_000 == 0) {
+				System.out.println(done);
+			}
 		}
 
 		stageOneComplete = true;
+
+		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation first pass [{0}]", stopwatch.toString()));
+		System.out.println("Second pass");
+		done = 0;
 		for (Long conceptId : entries) {
 			final Collection<Relationship> existingComponents = snomedTaxonomy.getInferredRelationships((long) conceptId);
 			final Collection<Relationship> generatedComponents = secondNormalisationPass(conceptId);
 			processor.apply(conceptId, existingComponents, generatedComponents);
+			if (++done % 10_000 == 0) {
+				System.out.println(done);
+			}
 		}
 
-		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation [{0}]", stopwatch.toString()));
+		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation second pass [{0}]", stopwatch.toString()));
 	}
 
 	public boolean isStageOneComplete() {

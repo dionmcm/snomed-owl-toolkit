@@ -90,11 +90,14 @@ public class Application {
 		}
 	}
 
+	public static String fileDate;
+
 	private void classify(List<String> args) throws ReasonerServiceException {
 		Set<File> snapshotFiles = getSnapshotFiles(args);
 		File deltaFile = getDeltaFiles(args);
 
-		File resultsFile = new File("classification-results-" + DATETIME_FORMAT.format(new Date()) + ZIP);
+		fileDate = DATETIME_FORMAT.format(new Date());
+		File resultsFile = new File("classification-results-" + fileDate + ZIP);
 		new SnomedReasonerService().classify(
 				"command-line",
 				snapshotFiles,

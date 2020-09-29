@@ -49,4 +49,9 @@ public class Node {
 	public Long getId() {
 		return id;
 	}
+
+	@Override
+	public String toString() {
+		return id.toString();
+	}
 }

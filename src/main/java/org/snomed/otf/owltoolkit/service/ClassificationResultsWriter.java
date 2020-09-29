@@ -15,14 +15,12 @@
  */
 package org.snomed.otf.owltoolkit.service;
 
+import org.snomed.otf.owltoolkit.Application;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeProcessor;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -51,12 +49,29 @@ class ClassificationResultsWriter {
 				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/sct2_Relationship_Delta_Classification_%s.txt", formattedDate)));
 				writeRelationshipChanges(writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
 
+				// Also write to file
+				try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("output/" + Application.fileDate + "-rels.txt"))) {
+					Map<Long, Set<Relationship>> addedStatements = sort(changeCollector.getAddedStatements());
+					Map<Long, Set<Relationship>> removedStatements = changeCollector.getRemovedStatements();
+					writeRelationshipChanges(fileWriter, addedStatements, removedStatements);
+				}
+
 				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_%s.txt", formattedDate)));
 				writeEquivalentConcepts(writer, equivalentConceptIdSets);
 			}
 		} catch (IOException e) {
 			throw new ReasonerServiceException("Failed to write out results archive.", e);
 		}
+	}
+
+	private Map<Long, Set<Relationship>> sort(Map<Long, Set<Relationship>> statements) {
+		TreeMap<Long, Set<Relationship>> sortedMap = new TreeMap<>();
+		for (Long key : statements.keySet()) {
+			TreeSet<Relationship> sortedSet = new TreeSet<>(Comparator.comparing(Relationship::getGroup).thenComparing(Relationship::getTypeId).thenComparing(Relationship::getDestinationId));
+			sortedSet.addAll(statements.get(key));
+			sortedMap.put(key, sortedSet);
+		}
+		return sortedMap;
 	}
 
 	private void writeRelationshipChanges(BufferedWriter writer, Map<Long, Set<Relationship>> addedStatements, Map<Long, Set<Relationship>> removedStatements) throws IOException {
