@@ -74,11 +74,7 @@ public class ReasonerTaxonomy implements Serializable {
 	}
 
 	private Set<Long> getOrReturnEmptySet(final Map<Long, Set<Long>> map, final long key) {
-		if (map.containsKey(key)) {
-			return map.get(key);
-		} else {
-			return Collections.emptySet();
-		}
+		return map.getOrDefault(key, Collections.emptySet());
 	}
 	
 	public Set<Long> getParents(final long sourceId) {

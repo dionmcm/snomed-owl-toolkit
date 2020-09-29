@@ -15,28 +15,44 @@
  */
 package org.snomed.otf.owltoolkit.normalform.transitive;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 public class NodeGraph {
 
-	private Map<Long, Node> nodeMap = new Long2ObjectOpenHashMap<>();
+	private final Set<Long> nodes = new LongOpenHashSet();
+	private final MutableGraph<Long> graph = GraphBuilder.directed().build();
 
-	public void addParent(long conceptId, long parentId) {
-		if (conceptId == parentId) return;
-		Node concept = nodeMap.computeIfAbsent(conceptId, Node::new);
-		Node parent = nodeMap.computeIfAbsent(parentId, Node::new);
-		concept.getParents().add(parent);
+	public void addParent(Long conceptId, Long parentId) {
+//		System.out.println("Add parent " + conceptId + " -> " + parentId);
+		nodes.add(conceptId);
+		nodes.add(parentId);
+		graph.putEdge(parentId, conceptId);
 	}
 
 	public Set<Long> getAncestors(long conceptId) {
-		Node node = nodeMap.get(conceptId);
-		if (node == null) {
+		if (!nodes.contains(conceptId)) {
 			return Collections.emptySet();
 		}
-		return node.getAncestorIds();
+		return graph.predecessors(conceptId);
 	}
+
+	public void dump() {
+//		for (Long aLong : nodeMap.keySet()) {
+//			Node node = nodeMap.get(aLong);
+//			printAll(node, "");
+//			System.out.println();
+//		}
+	}
+
+//	private void printAll(Node node, String indent) {
+//		System.out.println(indent + " " + node);
+//		for (Node parent : node.getParents()) {
+//			printAll(parent, indent + "-");
+//		}
+//	}
 }

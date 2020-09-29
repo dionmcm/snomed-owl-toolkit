@@ -22,6 +22,7 @@ package org.snomed.otf.owltoolkit.normalform.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.domain.Relationship;
@@ -30,7 +31,9 @@ import org.snomed.otf.owltoolkit.normalform.transitive.NodeGraph;
 import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -228,27 +231,30 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 	 */
 	private Set<Long> getTransitiveClosure(final long conceptId) {
 		final Set<Long> ancestors = relationshipNormalFormGenerator.getReasonerTaxonomy().getAncestors(conceptId);
-		final Set<Long> conceptAndAncestors = new LongOpenHashSet(ancestors);
-		conceptAndAncestors.add(conceptId);
-		return conceptAndAncestors;
+		return Sets.union(ancestors, Collections.singleton(conceptId));
 	}
+
+	private static final Map<Long, Map<Long, Set<Long>>> propertyChainTransitiveClosureCache = new Long2ObjectOpenHashMap<>();
 
 	private Set<Long> getPropertyChainTransitiveClosure(final long conceptId, Long chainDestinationType) {
 		// Build closure containing all possible hops using chainDestinationType
 		// For every concept found also add its super types
 
-		NodeGraph nodeGraph = relationshipNormalFormGenerator.getTransitiveNodeGraphs().getOrDefault(chainDestinationType, new NodeGraph());
-		ReasonerTaxonomy reasonerTaxonomy = relationshipNormalFormGenerator.getReasonerTaxonomy();
+		return propertyChainTransitiveClosureCache
+				.computeIfAbsent(conceptId, id -> new Long2ObjectOpenHashMap<>())
+				.computeIfAbsent(chainDestinationType, type -> {
+					NodeGraph nodeGraph = relationshipNormalFormGenerator.getTransitiveNodeGraphs().getOrDefault(chainDestinationType, new NodeGraph());
+					ReasonerTaxonomy reasonerTaxonomy = relationshipNormalFormGenerator.getReasonerTaxonomy();
 
-		Set<Long> chainPaths = new HashSet<>();
-		chainPaths.add(conceptId);
-		chainPaths.addAll(nodeGraph.getAncestors(conceptId));
-		Set<Long> chainStepAncestors = new HashSet<>();
-		for (Long chainNode : chainPaths) {
-			chainStepAncestors.addAll(reasonerTaxonomy.getAncestors(chainNode));
-		}
-		chainPaths.addAll(chainStepAncestors);
-		return chainPaths;
+					Set<Long> chainPaths = new LongOpenHashSet();
+					chainPaths.add(conceptId);
+					chainPaths.addAll(nodeGraph.getAncestors(conceptId));
+					Set<Long> chainStepAncestors = new LongOpenHashSet();
+					for (Long chainNode : chainPaths) {
+						chainStepAncestors.addAll(reasonerTaxonomy.getAncestors(chainNode));
+					}
+					return Sets.union(chainPaths, chainStepAncestors);
+				});
 	}
 
 	@Override

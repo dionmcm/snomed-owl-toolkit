@@ -73,6 +73,7 @@ public final class RelationshipNormalFormGenerator {
 	private final Set<PropertyChain> propertyChains;
 
 	private final Map<Long, Collection<Relationship>> generatedNonIsACache = new Long2ObjectOpenHashMap<>();
+	private final Map<Long, Collection<Relationship>> statedNonIsACache = new Long2ObjectOpenHashMap<>();
 	private final Set<Long> traversableProperties;
 	private final Map<Long, NodeGraph> transitiveNodeGraphs = new HashMap<>();
 	private final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap;
@@ -210,22 +211,7 @@ public final class RelationshipNormalFormGenerator {
 			otherNonIsAFragments.put(directSuperTypeId, getCachedNonIsAFragments(directSuperTypeId));
 		}
 
-		Set<AxiomRepresentation> axiomRepresentations = conceptAxiomStatementMap.get(conceptId);
-		final Collection<Relationship> ownStatedNonIsaRelationships;
-		if (axiomRepresentations == null) {
-			ownStatedNonIsaRelationships = snomedTaxonomy.getNonIsAStatements(conceptId);
-		} else {
-			ownStatedNonIsaRelationships = new ArrayList<>(snomedTaxonomy.getNonIsAStatements(conceptId));
-			ownStatedNonIsaRelationships.addAll(axiomRepresentations.stream()
-					.filter(axiomRepresentation -> conceptId.equals(axiomRepresentation.getLeftHandSideNamedConcept()))
-					.map(AxiomRepresentation::getRightHandSideRelationships)
-					.map(Map::values)
-					.flatMap(Collection::stream)
-					.flatMap(Collection::stream)
-					.filter(relationship -> relationship.getTypeId() != Concepts.IS_A_LONG)
-					.collect(Collectors.toList()));
-		}
-
+		final Collection<Relationship> ownStatedNonIsaRelationships = getStatedNonIsAFragments(conceptId);
 		final Collection<Relationship> ownInferredFragments = snomedTaxonomy.getInferredRelationships(conceptId);
 		final Collection<Relationship> ownInferredNonIsaFragments = Collections2.filter(ownInferredFragments, input -> input.getTypeId() != IS_A_LONG);
 
@@ -233,6 +219,27 @@ public final class RelationshipNormalFormGenerator {
 				ownInferredNonIsaFragments,
 				ownStatedNonIsaRelationships,
 				otherNonIsAFragments);
+	}
+
+	private Collection<Relationship> getStatedNonIsAFragments(Long conceptId) {
+//		return statedNonIsACache.computeIfAbsent(conceptId, id -> {
+			Set<AxiomRepresentation> axiomRepresentations = conceptAxiomStatementMap.get(conceptId);
+			final Collection<Relationship> ownStatedNonIsaRelationships;
+			if (axiomRepresentations == null) {
+				ownStatedNonIsaRelationships = snomedTaxonomy.getNonIsAStatements(conceptId);
+			} else {
+				ownStatedNonIsaRelationships = new ArrayList<>(snomedTaxonomy.getNonIsAStatements(conceptId));
+				ownStatedNonIsaRelationships.addAll(axiomRepresentations.stream()
+						.filter(axiomRepresentation -> conceptId.equals(axiomRepresentation.getLeftHandSideNamedConcept()))
+						.map(AxiomRepresentation::getRightHandSideRelationships)
+						.map(Map::values)
+						.flatMap(Collection::stream)
+						.flatMap(Collection::stream)
+						.filter(relationship -> relationship.getTypeId() != Concepts.IS_A_LONG)
+						.collect(Collectors.toList()));
+			}
+			return ownStatedNonIsaRelationships;
+//		});
 	}
 
 	/**
