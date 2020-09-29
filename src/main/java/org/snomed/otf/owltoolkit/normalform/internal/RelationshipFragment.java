@@ -137,7 +137,7 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 			}
 
 			// Rule 2
-			else {
+			else if (relationshipNormalFormGenerator.isStageOneComplete()) {
 				Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
 						.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
 						.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))

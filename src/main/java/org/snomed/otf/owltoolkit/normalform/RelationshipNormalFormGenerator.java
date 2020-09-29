@@ -105,6 +105,7 @@ public final class RelationshipNormalFormGenerator {
 	 * @param processor the change processor to route changes to
 	 * @return the total number of generated components
 	 */
+	boolean stageOneComplete = false;
 	public final void collectNormalFormChanges(final RelationshipChangeProcessor processor) {
 		LOGGER.info(">>> Relationship normal form generation");
 		final Stopwatch stopwatch = Stopwatch.createStarted();
@@ -114,6 +115,7 @@ public final class RelationshipNormalFormGenerator {
 			firstNormalisationPass(conceptId);
 		}
 
+		stageOneComplete = true;
 		for (Long conceptId : entries) {
 			final Collection<Relationship> existingComponents = snomedTaxonomy.getInferredRelationships((long) conceptId);
 			final Collection<Relationship> generatedComponents = secondNormalisationPass(conceptId);
@@ -121,6 +123,10 @@ public final class RelationshipNormalFormGenerator {
 		}
 
 		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation [{0}]", stopwatch.toString()));
+	}
+
+	public boolean isStageOneComplete() {
+		return stageOneComplete;
 	}
 
 	/**
@@ -137,8 +143,10 @@ public final class RelationshipNormalFormGenerator {
 		generatedNonIsACache.put(conceptId, ImmutableList.copyOf(inferredNonIsAFragments));
 
 		// Add to transitive graphs
-		inferredNonIsAFragments.stream().filter(r -> traversableProperties.contains(r.getTypeId())).forEach(r ->
-				transitiveNodeGraphs.get(r.getTypeId()).addParent(conceptId, r.getDestinationId()));
+		inferredNonIsAFragments.stream()
+				.filter(r -> r.getDestinationId() != conceptId)
+				.filter(r -> traversableProperties.contains(r.getTypeId()))
+				.forEach(r -> transitiveNodeGraphs.get(r.getTypeId()).addParent(conceptId, r.getDestinationId()));
 	}
 
 	/**
