@@ -205,7 +205,7 @@ public class OntologyService {
 		ontology.saveOntology(owlDocumentFormat, outputStream);
 	}
 
-	public FunctionalSyntaxDocumentFormat getFunctionalSyntaxDocumentFormat() {
+	public static FunctionalSyntaxDocumentFormat getFunctionalSyntaxDocumentFormat() {
 		FunctionalSyntaxDocumentFormat owlDocumentFormat = new SnomedFunctionalSyntaxDocumentFormat();
 		SnomedPrefixManager prefixManager = getSnomedPrefixManager();
 		owlDocumentFormat.setPrefixManager(prefixManager);
@@ -214,7 +214,7 @@ public class OntologyService {
 		return owlDocumentFormat;
 	}
 
-	public SnomedPrefixManager getSnomedPrefixManager() {
+	public static SnomedPrefixManager getSnomedPrefixManager() {
 		SnomedPrefixManager prefixManager = new SnomedPrefixManager();
 		prefixManager.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
 		prefixManager.setPrefix(SKOS_PREFIX, SKOS_URI);

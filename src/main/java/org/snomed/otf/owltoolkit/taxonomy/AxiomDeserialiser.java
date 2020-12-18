@@ -3,6 +3,7 @@ package org.snomed.otf.owltoolkit.taxonomy;
 import org.semanticweb.owlapi.OWLAPIConfigProvider;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.functional.parser.OWLFunctionalSyntaxOWLParser;
+import org.semanticweb.owlapi.io.OWLParserException;
 import org.semanticweb.owlapi.io.StringDocumentSource;
 import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
@@ -29,8 +30,8 @@ public class AxiomDeserialiser {
 	private final OWLOntologyManager owlOntologyManager;
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	AxiomDeserialiser() {
-		owlOntologyManager = OWLManager.createOWLOntologyManager();
+	public AxiomDeserialiser(OWLOntologyManager manager) {
+		owlOntologyManager = manager;
 		try {
 			owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(
 					new StringDocumentSource(ontologyDocStart + ontologyDocEnd));
@@ -51,6 +52,10 @@ public class AxiomDeserialiser {
 		timeTakenDeserialisingAxioms = 0;
 	}
 
+	public AxiomDeserialiser() {
+		this(OWLManager.createOWLOntologyManager());
+	}
+
 	public OWLAxiom deserialiseAxiom(String owlExpression, @Nullable String axiomIdentifier) throws OWLOntologyCreationException {
 		synchronized (this) {
 			try {
@@ -64,7 +69,7 @@ public class AxiomDeserialiser {
 				timeTakenDeserialisingAxioms += new Date().getTime() - start;
 
 				return owlAxiomsLoaded.iterator().next();
-			} catch (IOException e) {
+			} catch (IOException | OWLParserException e) {
 				throw new OWLOntologyCreationException("Failed to parse axiom " + axiomIdentifier + ", '" + owlExpression + "'", e);
 			} finally {
 				axiomsLoaded++;
