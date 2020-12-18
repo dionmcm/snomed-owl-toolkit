@@ -33,35 +33,73 @@ public class TinyFastApplication {
 		final TinyFastApplication app = new TinyFastApplication("snomed-releases/SnomedCT_InternationalRF2_PRODUCTION_20200731T120000Z" +
 				"/Snapshot/Terminology/sct2_sRefset_OWLExpressionSnapshot_INT_20200731.txt");
 
-		app.classifyOwlExpression("SubClassOf(\n" +
-						"	:1230000010 |thing|\n" +
+		app.classifyOwlExpressions(
+				"SubClassOf(\n" +
+				"	:1010000010\n" +
+				"	ObjectIntersectionOf(\n" +
+				"		:404684003 |Clinical finding (finding)|\n" +
+				"		ObjectSomeValuesFrom(\n" +
+				"			:609096000 |Role group (attribute)|\n" +
+				"			ObjectSomeValuesFrom(\n" +
+				"				:116676008 |Associated morphology (attribute)|\n" +
+				"				:50960005 |Hemorrhage (morphologic abnormality)|\n" +
+				"			)\n" +
+				"		)\n" +
+				"	)\n" +
+				")",
+				"EquivalentClasses(\n" +
+						"	:1020000010\n" +
 						"	ObjectIntersectionOf(\n" +
-						"		:404684003 |Clinical finding (finding)|\n" +
+						"		:281647001 |Adverse reaction (disorder)|\n" +
 						"		ObjectSomeValuesFrom(\n" +
 						"			:609096000 |Role group (attribute)|\n" +
 						"			ObjectSomeValuesFrom(\n" +
-						"				:116676008 |Associated morphology (attribute)|\n" +
-						"				:50960005 |Hemorrhage (morphologic abnormality)|\n" +
+						"				:246075003 |Causative agent (attribute)|\n" +
+						"				:758665008 | Caffeine hydrate (substance) |\n\n" +
 						"			)\n" +
 						"		)\n" +
 						"	)\n" +
-						")", "1230000010");
+						")",
+				"EquivalentClasses(\n" +
+						"	:1030000010\n" +
+						"	ObjectIntersectionOf(\n" +
+						"		:281647001 |Adverse reaction (disorder)|\n" +
+						"		ObjectSomeValuesFrom(\n" +
+						"			:609096000 |Role group (attribute)|\n" +
+						"			ObjectSomeValuesFrom(\n" +
+						"				:246075003 |Causative agent (attribute)|\n" +
+						"				:770965008 | Pegvaliase (substance) |\n\n" +
+						"			)\n" +
+						"		)\n" +
+						"	)\n" +
+						")",				"EquivalentClasses(\n" +
+						"	:1040000010\n" +
+						"	ObjectIntersectionOf(\n" +
+						"		:281647001 |Adverse reaction (disorder)|\n" +
+						"		ObjectSomeValuesFrom(\n" +
+						"			:609096000 |Role group (attribute)|\n" +
+						"			ObjectSomeValuesFrom(\n" +
+						"				:246075003 |Causative agent (attribute)|\n" +
+						"				:361000220103 | Nalmefene hydrochloride dihydrate (substance) |\n\n" +
+						"			)\n" +
+						"		)\n" +
+						"	)\n" +
+						")",
+				"EquivalentClasses(\n" +
+						"	:1050000010\n" +
+						"	ObjectIntersectionOf(\n" +
+						"		:281647001 |Adverse reaction (disorder)|\n" +
+						"		ObjectSomeValuesFrom(\n" +
+						"			:609096000 |Role group (attribute)|\n" +
+						"			ObjectSomeValuesFrom(\n" +
+						"				:246075003 |Causative agent (attribute)|\n" +
+						"				:381000220107 | Nicotine bitartrate dihydrate (substance) |\n\n" +
+						"			)\n" +
+						"		)\n" +
+						"	)\n" +
+						")"
+		);
 
-		app.classifyOwlExpression("EquivalentClasses(\n" +
-		"	:1240000010 | (disorder)|\n" +
-		"	ObjectIntersectionOf(\n" +
-		"		:281647001 |Adverse reaction (disorder)|\n" +
-		"		ObjectSomeValuesFrom(\n" +
-		"			:609096000 |Role group (attribute)|\n" +
-		"			ObjectSomeValuesFrom(\n" +
-		"				:246075003 |Causative agent (attribute)|\n" +
-		"				:758665008 | Caffeine hydrate (substance) |\n\n" +
-		"			)\n" +
-		"		)\n" +
-		"	)\n" +
-		")", "1240000010");
-
-		Thread.sleep(30_000);
 	}
 
 	public TinyFastApplication(String axiomRefsetFilePath) throws IOException, OWLOntologyCreationException, OWLOntologyStorageException {
@@ -113,34 +151,49 @@ public class TinyFastApplication {
 		return ontology;
 	}
 
-	private void classifyOwlExpression(String owlExpression, String axiomIdentifier) throws OWLOntologyCreationException {
-		owlExpression = owlExpression.replaceAll("\\|[^|]*\\|", "");
+	private void classifyOwlExpressions(String... owlExpressions) throws OWLOntologyCreationException {
+		timer = new TimerUtil("Classify expressions (" + owlExpressions.length + ")");
 
-		timer = new TimerUtil("Classify expression");
-		final OWLClassAxiom owlAxiom = (OWLClassAxiom) axiomDeserialiser.deserialiseAxiom(owlExpression, axiomIdentifier);
-		final ChangeApplied changeApplied = manager.addAxiom(ontology, owlAxiom);
+		Set<OWLClassAxiom> owlClassAxioms = new HashSet<>();
+		for (String owlExpression : owlExpressions) {
+			owlExpression = owlExpression.replaceAll("\\|[^|]*\\|", "");
+			OWLClassAxiom owlAxiom = (OWLClassAxiom) axiomDeserialiser.deserialiseAxiom(owlExpression, "expression");
+			owlClassAxioms.add(owlAxiom);
+		}
+
+		final ChangeApplied changeApplied = manager.addAxioms(ontology, owlClassAxioms);
 		if (changeApplied != ChangeApplied.SUCCESSFULLY) {
-			throw new IllegalStateException("Axiom not added to ontology. ChangeApplied:" + changeApplied);
+			throw new IllegalStateException("Axioms not added to ontology. ChangeApplied:" + changeApplied);
 		}
 
 		reasoner.flush();
 		reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 		timer.finish();
 
-		printSuperClasses(axiomIdentifier, "expression");
+		printSuperClasses(owlClassAxioms);
 
-		manager.removeAxiom(ontology, owlAxiom);
+		manager.removeAxioms(ontology, owlClassAxioms);
 	}
 
-	private void printSuperClasses(String axiomIdentifier, String label) {
-		final OWLClass owlClass = manager.getOWLDataFactory().getOWLClass(IRI.create("http://snomed.info/id/", axiomIdentifier));
-		final NodeSet<OWLClass> superClasses = reasoner.getSuperClasses(owlClass, true);
+	private void printSuperClasses(Set<OWLClassAxiom> owlClassAxioms) {
+		for (OWLClassAxiom owlAxiom : owlClassAxioms) {
+			OWLClass owlClass;
+			if (owlAxiom instanceof OWLSubClassOfAxiom) {
+				OWLSubClassOfAxiom subClass = (OWLSubClassOfAxiom) owlAxiom;
+				owlClass = subClass.getSubClass().getClassesInSignature().iterator().next();
+			} else {
+				OWLEquivalentClassesAxiom equivalentClass = (OWLEquivalentClassesAxiom) owlAxiom;
+				owlClass = equivalentClass.getNamedClasses().iterator().next();
+			}
 
-		System.out.println();
-		System.out.println("Inferred superclasses for " + label + " " + owlClass.toString() + ":");
-		for (Node<OWLClass> superClass : superClasses) {
-			System.out.print("- ");
-			System.out.println(superClass);
+			final NodeSet<OWLClass> superClasses = reasoner.getSuperClasses(owlClass, true);
+
+			System.out.println();
+			System.out.println("Inferred superclasses for " + owlClass.toString() + ":");
+			for (Node<OWLClass> superClass : superClasses) {
+				System.out.print("- ");
+				System.out.println(superClass);
+			}
 		}
 	}
 
