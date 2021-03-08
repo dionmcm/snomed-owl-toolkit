@@ -107,7 +107,7 @@ public class Application {
 				false // outputOntologyFileForDebug
 		);
 
-		System.out.println("Classification results written to " + resultsFile.getAbsolutePath());
+//		System.out.println("Classification results written to " + resultsFile.getAbsolutePath());
 	}
 
 	// RF2 to OWL

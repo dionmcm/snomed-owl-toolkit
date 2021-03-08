@@ -19,6 +19,7 @@ import org.snomed.otf.owltoolkit.Application;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeProcessor;
+import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -27,11 +28,13 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static java.lang.String.format;
+
 class ClassificationResultsWriter {
 
 	private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
-	private static final String RELATIONSHIPS_HEADER = "id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId";
+	private static final String RELATIONSHIPS_HEADER = "source\tattribute\tdestination";
 	private static final String EQUIVALENT_REFSET_HEADER = "id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\tmapTarget";
 	private static final String TAB = "\t";
 
@@ -39,29 +42,54 @@ class ClassificationResultsWriter {
 			RelationshipChangeProcessor changeCollector,
 			List<Set<Long>> equivalentConceptIdSets,
 			OutputStream resultsOutputStream,
-			Date startDate) throws ReasonerServiceException {
+			Date startDate, SnomedTaxonomy snomedTaxonomy) throws ReasonerServiceException {
+
 
 		try {
-			try (ZipOutputStream zipOutputStream = new ZipOutputStream(resultsOutputStream, UTF_8_CHARSET);
-				 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream))) {
+			final String filename = format("active-relationships-%s.txt", new Date().getTime());
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+				writer.write(RELATIONSHIPS_HEADER);
+				writer.newLine();
 
-				String formattedDate = DATE_FORMAT.format(startDate);
-				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/sct2_Relationship_Delta_Classification_%s.txt", formattedDate)));
-				writeRelationshipChanges(writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
-
-				// Also write to file
-				try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("output/" + Application.fileDate + "-rels.txt"))) {
-					Map<Long, Set<Relationship>> addedStatements = sort(changeCollector.getAddedStatements());
-					Map<Long, Set<Relationship>> removedStatements = changeCollector.getRemovedStatements();
-					writeRelationshipChanges(fileWriter, addedStatements, removedStatements);
+				final Map<Long, Set<Relationship>> addedStatements = changeCollector.getAddedStatements();
+				for (Long sourceConcept : addedStatements.keySet()) {
+					final String conceptFSNTerm = snomedTaxonomy.getConceptFSNTerm(sourceConcept);
+					for (Relationship relationship : addedStatements.get(sourceConcept)) {
+						writer.write(conceptFSNTerm);
+						writer.write("\t");
+						writer.write(snomedTaxonomy.getConceptFSNTerm(relationship.getTypeId()));
+						writer.write("\t");
+						writer.write(snomedTaxonomy.getConceptFSNTerm(relationship.getDestinationId()));
+						writer.newLine();
+					}
 				}
-
-				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_%s.txt", formattedDate)));
-				writeEquivalentConcepts(writer, equivalentConceptIdSets);
 			}
+			System.out.println("Output written to " + filename);
 		} catch (IOException e) {
-			throw new ReasonerServiceException("Failed to write out results archive.", e);
+			throw new ReasonerServiceException("Failed to write output.", e);
 		}
+
+//		try {
+//			try (ZipOutputStream zipOutputStream = new ZipOutputStream(resultsOutputStream, UTF_8_CHARSET);
+//				 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream))) {
+//
+//				String formattedDate = DATE_FORMAT.format(startDate);
+//				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/sct2_Relationship_Delta_Classification_%s.txt", formattedDate)));
+////				writeRelationshipChanges(writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
+//
+//				// Also write to file
+////				try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("output/" + Application.fileDate + "-rels.txt"))) {
+////					Map<Long, Set<Relationship>> addedStatements = sort(changeCollector.getAddedStatements());
+////					Map<Long, Set<Relationship>> removedStatements = changeCollector.getRemovedStatements();
+////					writeRelationshipChanges(fileWriter, addedStatements, removedStatements);
+////				}
+////
+////				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_%s.txt", formattedDate)));
+////				writeEquivalentConcepts(writer, equivalentConceptIdSets);
+//			}
+//		} catch (IOException e) {
+//			throw new ReasonerServiceException("Failed to write out results archive.", e);
+//		}
 	}
 
 	private Map<Long, Set<Relationship>> sort(Map<Long, Set<Relationship>> statements) {

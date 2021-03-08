@@ -115,7 +115,7 @@ public class SnomedReasonerService {
 		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, false);
+			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, true);
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
 		}
@@ -199,7 +199,7 @@ public class SnomedReasonerService {
 				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
 
 		logger.info("Writing results archive");
-		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
+		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate, snomedTaxonomy);
 		timer.checkpoint("Write results to disk");
 		timer.finish();
 	}

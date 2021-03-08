@@ -273,6 +273,11 @@ public class SnomedTaxonomy {
 		return conceptDescriptionMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 
+	public String getConceptFSNTerm(Long conceptId) {
+		return conceptDescriptionMap.getOrDefault(conceptId, Collections.emptySet())
+				.stream().filter(description -> description.getTypeId().equals(Concepts.FSN)).map(Description::getTerm).findFirst().orElse(null);
+	}
+
 	public void addUngroupedRole(Long contentType, Long attributeId) {
 		ungroupedRolesByContentType.computeIfAbsent(contentType, type -> new HashSet<>()).add(attributeId);
 	}
