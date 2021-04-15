@@ -1,5 +1,7 @@
 package org.snomed.otf.owltoolkit.conversion;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +29,7 @@ public class AxiomRelationshipConversionService {
 
 	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
-		ontologyService = new OntologyService(ungroupedAttributes);
+		ontologyService = new OntologyService(ungroupedAttributes, OWLManager.createOWLOntologyManager());
 	}
 
 	/**
@@ -38,7 +40,7 @@ public class AxiomRelationshipConversionService {
 	 */
 	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes, Collection<Long> objectAttributes, Collection<Long> dataAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
-		ontologyService = new OntologyService(ungroupedAttributes);
+		ontologyService = new OntologyService(ungroupedAttributes, OWLManager.createOWLOntologyManager());
 		this.objectAttributes = objectAttributes;
 		this.dataAttributes = dataAttributes;
 	}
@@ -176,7 +178,7 @@ public class AxiomRelationshipConversionService {
 	 * 	Currently supported axiom types are SubClassOf and EquivalentClasses - axioms of other types will be ignored.
 	 */
 	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, Set<OWLAxiom>> conceptAxiomMap, boolean ignoreGCIAxioms) throws ConversionException {
-		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatements = new HashMap<>();
+		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatements = new Long2ObjectOpenHashMap<>();
 		OWLAxiom currentAxiom = null;
 		try {
 			for (Long conceptId : conceptAxiomMap.keySet()) {

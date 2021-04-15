@@ -70,6 +70,8 @@ public class SnomedTaxonomyBuilder {
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
+	private final ReleaseImporter releaseImporter = new ReleaseImporter();
+
 	public SnomedTaxonomy build(InputStreamSet snomedRf2SnapshotArchives, boolean includeFSNs) throws ReleaseImportException {
 		return build(snomedRf2SnapshotArchives, null, includeFSNs);
 	}
@@ -89,7 +91,6 @@ public class SnomedTaxonomyBuilder {
 
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 		
-		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(snomedRf2OwlSnapshotArchive.getFileInputStreams(), OWL_SNAPSHOT_LOADING_PROFILE, snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
@@ -117,7 +118,6 @@ public class SnomedTaxonomyBuilder {
 
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snapshotComponentFactoryTap, deltaComponentFactoryTap);
 		
-		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
 				snomedRf2SnapshotArchives.getFileInputStreams(),
 				includeDescriptions ? SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE : SNAPSHOT_LOADING_PROFILE,
@@ -149,5 +149,10 @@ public class SnomedTaxonomyBuilder {
 		logger.info("{} active stated relationships loaded", snomedTaxonomy.getStatedRelationships().size());
 		logger.info("{} active axioms loaded", snomedTaxonomy.getAxiomCount());
 		return snomedTaxonomy;
+	}
+
+	public void updateTaxonomy(SnomedTaxonomy snomedTaxonomy, InputStream deltaInputStream) throws ReleaseImportException {
+		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snomedTaxonomy);
+		releaseImporter.loadDeltaReleaseFiles(deltaInputStream, DELTA_LOADING_PROFILE, snomedTaxonomyLoader);
 	}
 }

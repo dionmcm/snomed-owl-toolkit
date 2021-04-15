@@ -3,6 +3,7 @@ package org.snomed.otf.owltoolkit.conversion;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.ihtsdo.otf.snomedboot.factory.ComponentFactory;
 import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
+import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.functional.renderer.FunctionalSyntaxObjectRenderer;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -183,7 +184,7 @@ public class StatedRelationshipToOwlRefsetService {
 			axiomCopier.complete();
 			// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
 			Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
-			OntologyService ontologyService = new OntologyService(neverGroupedRoles);
+			OntologyService ontologyService = new OntologyService(neverGroupedRoles, OWLManager.createOWLOntologyManager());
 			
 			AxiomChangesGenerator generator = new AxiomChangesGenerator();
 			generator.generate(snomedTaxonomy, ontologyService, snomedRf2CompleteOwlSnapshotArchive);
@@ -312,7 +313,7 @@ public class StatedRelationshipToOwlRefsetService {
 		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
 		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
 
-		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
+		OntologyService ontologyService = new OntologyService(neverGroupedRoles, OWLManager.createOWLOntologyManager());
 		OWLOntology ontology = ontologyService.createOntology(snomedTaxonomy);
 		
 		Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = ontologyService.createAxiomsFromStatedRelationships(snomedTaxonomy, conceptIds);
@@ -325,7 +326,7 @@ public class StatedRelationshipToOwlRefsetService {
 		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
 		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
 
-		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
+		OntologyService ontologyService = new OntologyService(neverGroupedRoles, OWLManager.createOWLOntologyManager());
 		OWLOntology ontology = ontologyService.createOntology(snomedTaxonomy);
 		
 		Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = ontologyService.createAxiomsFromStatedRelationships(snomedTaxonomy);
