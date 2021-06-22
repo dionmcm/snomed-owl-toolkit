@@ -196,16 +196,16 @@ public class Application {
 	}
 
 	private void owlReferenceSetToStatedRelationships(List<String> args) throws IOException, ReleaseImportException, ConversionException {
-		/*
-		 * WARNING: Converting Axioms to Stated Relationships will result in a loss of semantic information.
-		 * The stated relationships will not classify correctly.
-		 * This function is to create a stated file for statistical purposes only.
-		 */
+
+		System.err.println("WARNING: Converting Axioms to Stated Relationships will result in a loss of semantic information.");
+		System.err.println("The stated relationships will not classify correctly.");
+		System.err.println("This function is to create a stated file for statistical purposes only.");
+
 		// Parameter validation
 		Set<File> snapshotFiles = getSnapshotFiles(args);
 		File deltaFile = getDeltaFiles(args);
 		try (InputStreamSet snapshotFilesSet = new InputStreamSet(snapshotFiles);
-			 FileOutputStream statedRelationshipOutputStream = new FileOutputStream(new File(STATED_RELATIONSHIP_SNAPSHOT))) {
+			 FileOutputStream statedRelationshipOutputStream = new FileOutputStream(STATED_RELATIONSHIP_SNAPSHOT)) {
 
 			FileInputStream deltaInputStream = deltaFile != null ? new FileInputStream(deltaFile) : null;
 			try {

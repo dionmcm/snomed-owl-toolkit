@@ -47,6 +47,7 @@ public class SnomedTaxonomy {
 
 	// Axiom maps must be synchronised because international and extension refset members are loaded in parallel
 	private Map<Long, List<OWLAxiom>> conceptAxiomMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+	private Map<Long, List<OWLAxiom>> inactiveConceptAxiomMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 	private Map<String, OWLAxiom> axiomsById = new ConcurrentHashMap<>();
 
 	private Map<Long, Set<Long>> inferredSubTypesMap = new Long2ObjectOpenHashMap<>();
@@ -231,11 +232,12 @@ public class SnomedTaxonomy {
 		return ontologyHeader;
 	}
 
-	public void addAxiom(String referencedComponentId, String axiomId, OWLAxiom owlAxiom) {
+	public void addAxiom(String referencedComponentId, String axiomId, OWLAxiom owlAxiom, boolean active) {
 		// Manually remove any existing axiom by axiomId.
 		// We can't use the natural behaviour of a Java Set because the OWLAxiom does not use the axiomId in the equals method.
 		OWLAxiom existingAxiomVersion = axiomsById.get(axiomId);
-		List<OWLAxiom> conceptAxioms = conceptAxiomMap.computeIfAbsent(parseLong(referencedComponentId), id -> new ArrayList<>());
+		Map<Long, List<OWLAxiom>> axiomMap = active ? conceptAxiomMap : inactiveConceptAxiomMap;
+		List<OWLAxiom> conceptAxioms = axiomMap.computeIfAbsent(parseLong(referencedComponentId), id -> new ArrayList<>());
 		if (existingAxiomVersion != null) {
 			conceptAxioms.remove(existingAxiomVersion);
 		}
@@ -309,6 +311,10 @@ public class SnomedTaxonomy {
 
 	public Map<Long, List<OWLAxiom>> getConceptAxiomMap() {
 		return conceptAxiomMap;
+	}
+
+	public Map<Long, List<OWLAxiom>> getInactiveConceptAxiomMap() {
+		return inactiveConceptAxiomMap;
 	}
 
 	public Set<Long> getInactivatedConcepts() {

@@ -34,6 +34,7 @@ public class SnomedTaxonomyBuilder {
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
 			.withoutDescriptions()
+			.withInactiveRefsetMembers()
 			.withInactiveConcepts()
 			.withFullRelationshipObjects()
 			.withFullConcreteRelationshipObjects()

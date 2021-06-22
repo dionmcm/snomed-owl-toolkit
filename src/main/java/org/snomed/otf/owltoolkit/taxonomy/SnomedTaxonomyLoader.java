@@ -32,7 +32,6 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import static java.lang.Long.parseLong;
 import static org.snomed.otf.owltoolkit.constants.Concepts.*;
@@ -178,18 +177,18 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			if (referencedComponentId.equals("1231000119100")) {
 				System.out.println("!! Loading row");
 			}
-			if (activeBool) {
+//			if (activeBool) {
 				try {
-					addActiveAxiom(id, referencedComponentId, otherValues[0]);
+					addAxiom(id, referencedComponentId, otherValues[0], activeBool);
 				} catch (OWLException | OWLRuntimeException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 					owlParsingExceptionThrown = e;
 					owlParsingExceptionMemberId = id;
 				}
-			} else {
+//			} else {
 				// Remove the axiom from our active set
 				// Match by id rather than a deserialised representation because the equals method may fail.
-				snomedTaxonomy.removeAxiom(referencedComponentId, id);
-			}
+//				snomedTaxonomy.removeAxiom(referencedComponentId, id);
+//			}
 			if (referencedComponentId.equals("1231000119100")) {
 				final List<OWLAxiom> owlAxioms = snomedTaxonomy.getConceptAxiomMap().get(1231000119100L);
 				System.out.println("1231000119100 axioms: " + owlAxioms);
@@ -229,13 +228,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 	}
 
-	public void addActiveAxiom(String id, String referencedComponentId, String owlExpression) throws OWLOntologyCreationException {
+	public void addAxiom(String id, String referencedComponentId, String owlExpression, boolean active) throws OWLOntologyCreationException {
 		String owlExpressionString = owlExpression
 				// Replace any remaining outdated role group constants
 				.replace(OntologyService.ROLE_GROUP_OUTDATED_CONSTANT, OntologyService.ROLE_GROUP_SCTID);
 
 		OWLAxiom owlAxiom = axiomDeserialiser.deserialiseAxiom(owlExpressionString, id);
-		snomedTaxonomy.addAxiom(referencedComponentId, id, owlAxiom);
+		snomedTaxonomy.addAxiom(referencedComponentId, id, owlAxiom, active);
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package org.snomed.otf.owltoolkit.ontology;
 
 import com.google.common.collect.Lists;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.snomed.otf.owltoolkit.constants.Concepts;
@@ -32,10 +31,10 @@ public class OntologyServiceTest {
 		addAttribute("400", snomedTaxonomyLoader);
 
 		// Add regular property chain
-		snomedTaxonomyLoader.addActiveAxiom(UUID.randomUUID().toString(), "100", "SubObjectPropertyOf(ObjectPropertyChain(:100 :200) :300)");
+		snomedTaxonomyLoader.addAxiom(UUID.randomUUID().toString(), "100", "SubObjectPropertyOf(ObjectPropertyChain(:100 :200) :300)", true);
 
 		// Add transitive property (shortcut for property chain involving just that type)
-		snomedTaxonomyLoader.addActiveAxiom(UUID.randomUUID().toString(), "400", "TransitiveObjectProperty(:400)");
+		snomedTaxonomyLoader.addAxiom(UUID.randomUUID().toString(), "400", "TransitiveObjectProperty(:400)", true);
 
 		// Extract property chains from the ontology created from the Snomed taxonomy
 		OWLOntology ontology = ontologyService.createOntology(snomedTaxonomyLoader.getSnomedTaxonomy());
