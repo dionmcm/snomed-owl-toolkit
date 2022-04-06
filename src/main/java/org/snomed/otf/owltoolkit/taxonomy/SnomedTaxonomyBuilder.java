@@ -41,10 +41,7 @@ public class SnomedTaxonomyBuilder {
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
 			.withoutDescriptions()
 			.withInactiveConcepts()
-			.withFullRelationshipObjects()
-			.withFullConcreteRelationshipObjects()
 			.withStatedRelationships()
-			.withFullRefsetMemberObjects()
 			// Inactive relationships needed when loading the snapshot for ID reuse.
 			.withInactiveRelationships()
 			.withRefset(OWL_ONTOLOGY_REFERENCE_SET)
@@ -55,7 +52,7 @@ public class SnomedTaxonomyBuilder {
 			.withIncludedReferenceSetFilenamePattern(".*_cissccRefset_MRCMAttributeDomain.*");
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE = SNAPSHOT_LOADING_PROFILE
-			.withFullDescriptionObjects()
+			.withDescriptions()
 			.withAllRefsets()// We don't know what the ID of the language reference set is going to be.
 			.withIncludedReferenceSetFilenamePattern("der2_cRefset_Language.*");
 	
@@ -65,7 +62,6 @@ public class SnomedTaxonomyBuilder {
 			.withRefset(OWL_ONTOLOGY_REFERENCE_SET)
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
-			.withFullRefsetMemberObjects()
 			.withoutDescriptions();
 	
 	private static final LoadingProfile DELTA_LOADING_PROFILE = SNAPSHOT_LOADING_PROFILE
@@ -97,7 +93,7 @@ public class SnomedTaxonomyBuilder {
 
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 		
-		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(snomedRf2OwlSnapshotArchive.getFileInputStreams(), OWL_SNAPSHOT_LOADING_PROFILE, snomedTaxonomyLoader);
+		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(snomedRf2OwlSnapshotArchive.getFileInputStreams(), OWL_SNAPSHOT_LOADING_PROFILE, snomedTaxonomyLoader, false);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
 		logger.info("Time taken deserialising axioms {}s", (snomedTaxonomyLoader.getTimeTakenDeserialisingAxioms() / 1000.00));
@@ -127,7 +123,8 @@ public class SnomedTaxonomyBuilder {
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
 				snomedRf2SnapshotArchives.getFileInputStreams(),
 				includeDescriptions ? SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE : SNAPSHOT_LOADING_PROFILE,
-				snomedTaxonomyLoader);
+				snomedTaxonomyLoader,
+				false);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
 		logger.info("Time taken deserialising axioms {}s", (snomedTaxonomyLoader.getTimeTakenDeserialisingAxioms() / 1000.00));
@@ -139,7 +136,8 @@ public class SnomedTaxonomyBuilder {
 			releaseImporter.loadDeltaReleaseFiles(
 					currentReleaseRf2DeltaArchive,
 					includeDescriptions ? DELTA_LOADING_PROFILE_PLUS_LANGUAGE : DELTA_LOADING_PROFILE,
-					snomedTaxonomyLoader);
+					snomedTaxonomyLoader,
+					false);
 			snomedTaxonomyLoader.reportErrors();
 			logger.info("Loaded delta");
 			logger.info("Time taken deserialising axioms {}s", (snomedTaxonomyLoader.getTimeTakenDeserialisingAxioms() / 1000));
@@ -159,7 +157,7 @@ public class SnomedTaxonomyBuilder {
 
 	public void updateTaxonomy(SnomedTaxonomy snomedTaxonomy, InputStream deltaInputStream) throws ReleaseImportException {
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snomedTaxonomy);
-		releaseImporter.loadDeltaReleaseFiles(deltaInputStream, DELTA_LOADING_PROFILE, snomedTaxonomyLoader);
+		releaseImporter.loadDeltaReleaseFiles(deltaInputStream, DELTA_LOADING_PROFILE, snomedTaxonomyLoader, false);
 	}
 
 	/**
